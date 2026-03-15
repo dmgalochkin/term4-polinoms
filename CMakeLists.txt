@@ -13,7 +13,8 @@ endif()
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/polinoms)
 
-add_subdirectory(main)
+# Сборка компонентов
 add_subdirectory(polinoms)
+add_subdirectory(qt_gui)
 add_subdirectory(gtest)
 add_subdirectory(test)

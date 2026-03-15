@@ -1,95 +1,77 @@
 #pragma once
 #include "TTable.hpp"
 #include "TArrayTable.hpp"
+#include "TListTable.hpp"
+#include "TOrderedArrayTable.hpp"
+#include "TAVLTreeTable.hpp"
 #include "TPostfixCalculator.hpp"
-#include <memory>
 #include <vector>
 #include <string>
 #include <iostream>
 #include <iomanip>
 
-// Типы таблиц
 enum class TableType
 {
   ARRAY_LINEAR,
   LIST_LINEAR,
   ARRAY_ORDERED,
-  TREE_AVL,
-  HASH_OPEN,
-  HASH_CHAIN
+  TREE_AVL
 };
 
-// Система управления полиномами
 class TPolinomManager
 {
 private:
-  std::vector<std::unique_ptr<TPolinomTable>> tables;
+  std::vector<TPolinomTable*> tables;
   std::vector<std::string> tableNames;
   size_t activeTableIndex;
   TPostfixCalculator calculator;
   
-  // Создание таблицы по типу
-  std::unique_ptr<TPolinomTable> CreateTable(TableType type);
-  
-  // Получение имени типа таблицы
+  TPolinomTable* CreateTable(TableType type);
   std::string GetTableTypeName(TableType type) const;
 
 public:
   TPolinomManager();
-  ~TPolinomManager() = default;
+  ~TPolinomManager();
   
-  // Инициализация всех типов таблиц
   void InitializeTables();
   
-  // Управление активной таблицей
   void SetActiveTable(size_t index);
   size_t GetActiveTableIndex() const;
   std::string GetActiveTableName() const;
   TPolinomTable* GetActiveTable();
   const TPolinomTable* GetActiveTable() const;
   
-  // Операции с полиномами (выполняются во всех таблицах одновременно)
   bool AddPolinom(const std::string& name, const TPolinom& polinom);
   bool RemovePolinom(const std::string& name);
   
-  // Поиск полинома (только в активной таблице)
   TPolinom* FindPolinom(const std::string& name);
   const TPolinom* FindPolinom(const std::string& name) const;
   
-  // Проверка существования полинома
   bool ContainsPolinom(const std::string& name) const;
   
-  // Получение всех полиномов из активной таблицы
   std::vector<std::pair<std::string, TPolinom>> GetAllPolinoms() const;
   std::vector<std::string> GetPolinomNames() const;
   
-  // Вычисление выражений
   TPolinom EvaluateExpression(const std::string& expression);
   bool EvaluateAndStore(const std::string& name, const std::string& expression);
   
-  // Операции над отдельными полиномами
   TPolinom EvaluateAt(const std::string& name, const std::vector<double>& point);
   TPolinom MultiplyByConstant(const std::string& name, double constant);
   TPolinom Differentiate(const std::string& name, int variable);
   TPolinom Integrate(const std::string& name, int variable);
   
-  // Информационные методы
   size_t GetTableCount() const;
   std::string GetTableName(size_t index) const;
   size_t GetPolinomCount() const;
   
-  // Отображение таблицы
   void PrintActiveTable(std::ostream& os = std::cout) const;
   void PrintTableInfo(std::ostream& os = std::cout) const;
   
-  // Очистка всех таблиц
   void ClearAll();
   
-  // Создание примеров полиномов для демонстрации
   void CreateSamplePolinoms();
 };
 
-// Реализация методов
 
 inline TPolinomManager::TPolinomManager() : activeTableIndex(0)
 {
@@ -97,24 +79,28 @@ inline TPolinomManager::TPolinomManager() : activeTableIndex(0)
   calculator.SetActiveTable(GetActiveTable());
 }
 
-inline std::unique_ptr<TPolinomTable> TPolinomManager::CreateTable(TableType type)
+inline TPolinomManager::~TPolinomManager()
+{
+  for (TPolinomTable* table : tables)
+  {
+    delete table;
+  }
+}
+
+inline TPolinomTable* TPolinomManager::CreateTable(TableType type)
 {
   switch (type)
   {
     case TableType::ARRAY_LINEAR:
-      return std::make_unique<TPolinomArrayTable>();
-    
-    // Пока реализована только линейная таблица на массиве
-    // Остальные типы будут добавлены позже
+      return new TPolinomArrayTable();
     case TableType::LIST_LINEAR:
+      return new TPolinomListTable();
     case TableType::ARRAY_ORDERED:
+      return new TPolinomOrderedArrayTable();
     case TableType::TREE_AVL:
-    case TableType::HASH_OPEN:
-    case TableType::HASH_CHAIN:
-      return std::make_unique<TPolinomArrayTable>(); // Временная заглушка
-    
+      return new TPolinomAVLTreeTable();
     default:
-      return std::make_unique<TPolinomArrayTable>();
+      return new TPolinomArrayTable();
   }
 }
 
@@ -126,8 +112,6 @@ inline std::string TPolinomManager::GetTableTypeName(TableType type) const
     case TableType::LIST_LINEAR: return "Linear List Table";
     case TableType::ARRAY_ORDERED: return "Ordered Array Table";
     case TableType::TREE_AVL: return "AVL Tree Table";
-    case TableType::HASH_OPEN: return "Hash Table (Open Addressing)";
-    case TableType::HASH_CHAIN: return "Hash Table (Chaining)";
     default: return "Unknown Table";
   }
 }
@@ -138,11 +122,13 @@ inline void TPolinomManager::InitializeTables()
     TableType::ARRAY_LINEAR,
     TableType::LIST_LINEAR,
     TableType::ARRAY_ORDERED,
-    TableType::TREE_AVL,
-    TableType::HASH_OPEN,
-    TableType::HASH_CHAIN
+    TableType::TREE_AVL
   };
   
+  for (TPolinomTable* table : tables)
+  {
+    delete table;
+  }
   tables.clear();
   tableNames.clear();
   
@@ -177,19 +163,18 @@ inline std::string TPolinomManager::GetActiveTableName() const
 
 inline TPolinomTable* TPolinomManager::GetActiveTable()
 {
-  return tables[activeTableIndex].get();
+  return tables[activeTableIndex];
 }
 
 inline const TPolinomTable* TPolinomManager::GetActiveTable() const
 {
-  return tables[activeTableIndex].get();
+  return tables[activeTableIndex];
 }
 
 inline bool TPolinomManager::AddPolinom(const std::string& name, const TPolinom& polinom)
 {
   try
   {
-    // Добавляем во все таблицы одновременно
     for (auto& table : tables)
     {
       table->Insert(name, polinom);
@@ -205,7 +190,6 @@ inline bool TPolinomManager::AddPolinom(const std::string& name, const TPolinom&
 inline bool TPolinomManager::RemovePolinom(const std::string& name)
 {
   bool success = true;
-  // Удаляем из всех таблиц одновременно
   for (auto& table : tables)
   {
     if (!table->Remove(name))
@@ -268,7 +252,7 @@ inline TPolinom TPolinomManager::EvaluateAt(const std::string& name, const std::
   }
   
   double value = polinom->Evaluate(point);
-  return TPolinom(TMonom(value, {0.0, 0.0, 0.0})); // Возвращаем как константный полином
+  return TPolinom(TMonom(value, {0.0, 0.0, 0.0}));
 }
 
 inline TPolinom TPolinomManager::MultiplyByConstant(const std::string& name, double constant)
@@ -366,27 +350,22 @@ inline void TPolinomManager::ClearAll()
 
 inline void TPolinomManager::CreateSamplePolinoms()
 {
-  // Создаем примеры полиномов для демонстрации
-  // pol1 = 3.2x^2*y^3*z^1 - 1.3x^1*z^4
   TMonom m1(3.2, {2.0, 3.0, 1.0});
   TMonom m2(-1.3, {1.0, 0.0, 4.0});
   std::vector<TMonom> monoms1 = {m1, m2};
   TPolinom pol1(monoms1);
   AddPolinom("pol1", pol1);
   
-  // pol2 = -3.2x^2*y^3*z^1 + 1.3x^1*z^4
   TMonom m3(-3.2, {2.0, 3.0, 1.0});
   TMonom m4(1.3, {1.0, 0.0, 4.0});
   std::vector<TMonom> monoms2 = {m3, m4};
   TPolinom pol2(monoms2);
   AddPolinom("pol2", pol2);
   
-  // const6 = 6.0
   TMonom m5(6.0, {0.0, 0.0, 0.0});
   TPolinom const6(m5);
   AddPolinom("const6", const6);
   
-  // q = 4.0x^2
   TMonom m6(4.0, {2.0, 0.0, 0.0});
   TPolinom q(m6);
   AddPolinom("q", q);

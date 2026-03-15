@@ -7,56 +7,30 @@
 #include <sstream>
 #include <stdexcept>
 
-// Класс для работы с постфиксными выражениями полиномов
 class TPostfixCalculator
 {
 private:
-  TPolinomTable* table; // Активная таблица для поиска полиномов
+  TPolinomTable* table;
   
-  // Проверка, является ли строка числом
   bool IsNumber(const std::string& str) const;
-  
-  // Проверка, является ли строка оператором
   bool IsOperator(const std::string& str) const;
-  
-  // Преобразование строки в число
   double StringToNumber(const std::string& str) const;
-  
-  // Создание полинома-константы
   TPolinom CreateConstantPolinom(double value) const;
-  
-  // Выполнение операции над двумя полиномами
   TPolinom ExecuteOperation(const TPolinom& left, const TPolinom& right, const std::string& op) const;
-  
-  // Выполнение унарной операции
   TPolinom ExecuteUnaryOperation(const TPolinom& operand, const std::string& op) const;
 
 public:
   explicit TPostfixCalculator(TPolinomTable* activeTable = nullptr);
   
-  // Установка активной таблицы
   void SetActiveTable(TPolinomTable* activeTable);
-  
-  // Разбор строки на токены
   std::vector<std::string> Tokenize(const std::string& expression) const;
-  
-  // Преобразование инфиксного выражения в постфиксное (алгоритм сортировочной станции)
   std::vector<std::string> InfixToPostfix(const std::vector<std::string>& tokens) const;
-  
-  // Вычисление постфиксного выражения
   TPolinom EvaluatePostfix(const std::vector<std::string>& postfixTokens) const;
-  
-  // Вычисление выражения (полный цикл: токенизация -> постфикс -> вычисление)
   TPolinom Evaluate(const std::string& expression) const;
-  
-  // Получение приоритета оператора
   int GetOperatorPriority(const std::string& op) const;
-  
-  // Проверка ассоциативности оператора (true = левая, false = правая)
   bool IsLeftAssociative(const std::string& op) const;
 };
 
-// Реализация методов
 
 inline TPostfixCalculator::TPostfixCalculator(TPolinomTable* activeTable)
   : table(activeTable)
@@ -108,7 +82,6 @@ inline double TPostfixCalculator::StringToNumber(const std::string& str) const
 
 inline TPolinom TPostfixCalculator::CreateConstantPolinom(double value) const
 {
-  // Создаем полином-константу от 3 переменных
   TMonom constantMonom(value, {0.0, 0.0, 0.0});
   return TPolinom(constantMonom);
 }
@@ -129,9 +102,7 @@ inline TPolinom TPostfixCalculator::ExecuteOperation(const TPolinom& left, const
   }
   else if (op == "/")
   {
-    // Деление полиномов - упрощенная версия (деление на константу)
-    // Полное деление полиномов требует более сложной реализации
-    if (right.GetMonomCount() == 1 && 
+    if (right.GetMonomCount() == 1 &&
         right.GetMonoms()[0].GetPowers()[0] == 0.0 &&
         right.GetMonoms()[0].GetPowers()[1] == 0.0 &&
         right.GetMonoms()[0].GetPowers()[2] == 0.0)
@@ -158,12 +129,10 @@ inline TPolinom TPostfixCalculator::ExecuteUnaryOperation(const TPolinom& operan
 {
   if (op == "diff")
   {
-    // Дифференцирование по первой переменной (x)
     return operand.Differentiate(0);
   }
   else if (op == "int")
   {
-    // Интегрирование по первой переменной (x)
     return operand.Integrate(0);
   }
   else
@@ -235,7 +204,6 @@ inline std::vector<std::string> TPostfixCalculator::InfixToPostfix(const std::ve
   {
     if (IsNumber(token) || (!IsOperator(token) && token != "(" && token != ")"))
     {
-      // Число или имя полинома
       output.push_back(token);
     }
     else if (IsOperator(token))
@@ -285,7 +253,6 @@ inline TPolinom TPostfixCalculator::EvaluatePostfix(const std::vector<std::strin
   {
     if (IsNumber(token))
     {
-      // Число - создаем полином-константу
       double value = StringToNumber(token);
       stack.push(CreateConstantPolinom(value));
     }
@@ -293,7 +260,6 @@ inline TPolinom TPostfixCalculator::EvaluatePostfix(const std::vector<std::strin
     {
       if (token == "diff" || token == "int")
       {
-        // Унарная операция
         if (stack.empty())
         {
           throw std::runtime_error("Not enough operands for unary operator: " + token);
@@ -304,7 +270,6 @@ inline TPolinom TPostfixCalculator::EvaluatePostfix(const std::vector<std::strin
       }
       else
       {
-        // Бинарная операция
         if (stack.size() < 2)
         {
           throw std::runtime_error("Not enough operands for binary operator: " + token);
@@ -316,7 +281,6 @@ inline TPolinom TPostfixCalculator::EvaluatePostfix(const std::vector<std::strin
     }
     else
     {
-      // Имя полинома - ищем в таблице
       if (!table)
       {
         throw std::runtime_error("No active table set for polynomial lookup");

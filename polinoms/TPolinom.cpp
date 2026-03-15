@@ -3,7 +3,6 @@
 #include <fstream>
 #include <sstream>
 
-// Конструкторы
 TPolinom::TPolinom() : dim(0) {}
 
 TPolinom::TPolinom(size_t d) : dim(d) {}
@@ -46,10 +45,8 @@ TPolinom::TPolinom(const TPolinom& other)
 TPolinom::TPolinom(TPolinom&& other)
   : monoms(std::move(other.monoms)), dim(other.dim) {}
 
-// Деструктор
 TPolinom::~TPolinom() {}
 
-// Операторы присваивания
 TPolinom& TPolinom::operator=(const TPolinom& other)
 {
   if (this != &other)
@@ -70,7 +67,6 @@ TPolinom& TPolinom::operator=(TPolinom&& other)
   return *this;
 }
 
-// Получение размерности
 size_t TPolinom::GetDim() const
 {
   return dim;
@@ -86,7 +82,6 @@ const std::vector<TMonom>& TPolinom::GetMonoms() const
   return monoms;
 }
 
-// Приведение подобных, удаление нулевых мономов, сортировка
 void TPolinom::Normalize()
 {
   if (monoms.empty())
@@ -94,7 +89,6 @@ void TPolinom::Normalize()
     return;
   }
   
-  // Сортируем по степеням
   std::sort(monoms.begin(), monoms.end(),
             [](const TMonom& a, const TMonom& b) { return a < b; });
   
@@ -107,7 +101,6 @@ void TPolinom::Normalize()
     auto next = it + 1;
     TMonom current = *it;
     
-    // Объединяем одинаковые мономы
     while (next != monoms.end() && current == *next)
     {
       current.SetCoef(current.GetCoef() + next->GetCoef());
@@ -124,7 +117,6 @@ void TPolinom::Normalize()
   monoms = std::move(result);
 }
 
-// Арифметические операции
 TPolinom TPolinom::operator+(const TPolinom& other) const
 {
   if (dim != other.dim)
@@ -179,7 +171,6 @@ TPolinom TPolinom::operator*(const TPolinom& other) const
   return result;
 }
 
-// Унарный минус
 TPolinom TPolinom::operator-() const
 {
   TPolinom result = *this;
@@ -190,7 +181,6 @@ TPolinom TPolinom::operator-() const
   return result;
 }
 
-// Операторы сравнения
 bool TPolinom::operator==(const TPolinom& other) const
 {
   if (dim != other.dim || monoms.size() != other.monoms.size())
@@ -198,7 +188,6 @@ bool TPolinom::operator==(const TPolinom& other) const
     return false;
   }
   
-  // Создаем копии для нормализации
   TPolinom temp1 = *this;
   TPolinom temp2 = other;
   temp1.Normalize();
@@ -225,7 +214,6 @@ bool TPolinom::operator!=(const TPolinom& other) const
   return !(*this == other);
 }
 
-// Умножение на скаляр
 TPolinom TPolinom::operator*(double scalar) const
 {
   TPolinom result = *this;
@@ -235,7 +223,7 @@ TPolinom TPolinom::operator*(double scalar) const
   }
   if (std::abs(scalar) < EPS)
   {
-    result.monoms.clear();   // обнуление
+    result.monoms.clear();
   }
   return result;
 }
@@ -248,7 +236,7 @@ TPolinom& TPolinom::operator*=(double scalar)
   }
   if (std::abs(scalar) < EPS)
   {
-    monoms.clear();   // обнуление
+    monoms.clear();
   }
   return *this;
 }
@@ -258,7 +246,6 @@ TPolinom operator*(double scalar, const TPolinom& p)
   return p * scalar;
 }
 
-// Операторы +=, -=, *=
 TPolinom& TPolinom::operator+=(const TPolinom& other)
 {
   *this = *this + other;
@@ -277,7 +264,6 @@ TPolinom& TPolinom::operator*=(const TPolinom& other)
   return *this;
 }
 
-// Дифференцирование
 TPolinom TPolinom::Differentiate(int varIdx) const
 {
   if (varIdx < 0 || varIdx >= static_cast<int>(dim))
@@ -298,7 +284,6 @@ TPolinom TPolinom::Differentiate(int varIdx) const
   return result;
 }
 
-// Интегрирование
 TPolinom TPolinom::Integrate(int varIdx) const
 {
   if (varIdx < 0 || varIdx >= static_cast<int>(dim))
@@ -319,7 +304,6 @@ TPolinom TPolinom::Integrate(int varIdx) const
   return result;
 }
 
-// Добавление константы
 void TPolinom::AddConstant(double c)
 {
   if (std::abs(c) < EPS)
@@ -328,7 +312,6 @@ void TPolinom::AddConstant(double c)
   }
   if (dim == 0)
   {
-    // Если размерность не определена, устанавливаем её равной 1 (условно)
     dim = 1;
   }
   std::vector<double> zeroPowers(dim, 0.0);
@@ -337,7 +320,6 @@ void TPolinom::AddConstant(double c)
   Normalize();
 }
 
-// Добавление монома
 void TPolinom::AddMonom(const TMonom& monom)
 {
   if (dim == 0)
@@ -356,13 +338,11 @@ void TPolinom::AddMonom(const TMonom& monom)
   }
 }
 
-// Проверка на нулевой полином
 bool TPolinom::IsZero() const
 {
   return monoms.empty();
 }
 
-// Вычисление значения полинома в точке
 double TPolinom::Evaluate(const std::vector<double>& point) const
 {
   if (point.size() != dim)
@@ -384,7 +364,6 @@ double TPolinom::Evaluate(const std::vector<double>& point) const
   return result;
 }
 
-// Вывод полинома в поток
 void TPolinom::Print(std::ostream& os) const
 {
   if (monoms.empty())
@@ -409,7 +388,6 @@ void TPolinom::Print(std::ostream& os) const
   }
 }
 
-// Операторы ввода/вывода
 std::ostream& operator<<(std::ostream& os, const TPolinom& p)
 {
   p.Print(os);
@@ -431,7 +409,6 @@ std::istream& operator>>(std::istream& is, TPolinom& p)
   return is;
 }
 
-// Сохранение/загрузка в файл
 void TPolinom::SaveToFile(const std::string& filename) const
 {
   std::ofstream file(filename);

@@ -4,7 +4,6 @@
 #include <string>
 #include <algorithm>
 
-// Линейная таблица на массиве
 template<typename T>
 class TArrayTable : public TTable<T>
 {
@@ -23,43 +22,32 @@ private:
   size_t size;
   size_t capacity;
   
-  // Поиск индекса элемента по ключу
   int FindIndex(const std::string& key) const;
-  
-  // Увеличение размера массива при необходимости
   void Resize();
-  
-  // Сжатие массива (удаление помеченных как удаленные)
   void Compact();
 
 public:
   explicit TArrayTable(size_t initialCapacity = 16);
   ~TArrayTable() override = default;
   
-  // Основные операции
   void Insert(const std::string& key, const T& value) override;
   bool Remove(const std::string& key) override;
   T* Find(const std::string& key) override;
   const T* Find(const std::string& key) const override;
   
-  // Информационные методы
   size_t GetSize() const override;
   bool IsEmpty() const override;
   void Clear() override;
   
-  // Получение всех ключей и значений
   std::vector<std::string> GetKeys() const override;
   std::vector<std::pair<std::string, T>> GetAll() const override;
   
-  // Проверка существования ключа
   bool Contains(const std::string& key) const override;
   
-  // Специфичные для массива методы
   size_t GetCapacity() const;
   double GetLoadFactor() const;
 };
 
-// Реализация методов
 
 template<typename T>
 TArrayTable<T>::TArrayTable(size_t initialCapacity) 
@@ -84,7 +72,7 @@ int TArrayTable<T>::FindIndex(const std::string& key) const
 template<typename T>
 void TArrayTable<T>::Resize()
 {
-  if (size >= capacity * 0.75) // Коэффициент загрузки 75%
+  if (size >= capacity * 0.75)
   {
     size_t oldCapacity = capacity;
     capacity *= 2;
@@ -93,7 +81,6 @@ void TArrayTable<T>::Resize()
     data.resize(capacity);
     size = 0;
     
-    // Перевставляем все активные элементы
     for (size_t i = 0; i < oldCapacity; ++i)
     {
       if (!oldData[i].isDeleted)
@@ -121,7 +108,6 @@ void TArrayTable<T>::Compact()
   data = std::move(newData);
   data.resize(capacity);
   
-  // Заполняем оставшиеся места пустыми записями
   for (size_t i = size; i < capacity; ++i)
   {
     data[i] = TableEntry();
@@ -131,17 +117,15 @@ void TArrayTable<T>::Compact()
 template<typename T>
 void TArrayTable<T>::Insert(const std::string& key, const T& value)
 {
-  // Проверяем, существует ли уже такой ключ
   int existingIndex = FindIndex(key);
   if (existingIndex != -1)
   {
-    data[existingIndex].value = value; // Обновляем значение
+    data[existingIndex].value = value;
     return;
   }
   
-  Resize(); // Проверяем необходимость увеличения размера
+  Resize();
   
-  // Ищем первое свободное место
   for (size_t i = 0; i < capacity; ++i)
   {
     if (data[i].isDeleted)
@@ -152,7 +136,6 @@ void TArrayTable<T>::Insert(const std::string& key, const T& value)
     }
   }
   
-  // Если дошли сюда, значит что-то пошло не так
   throw std::runtime_error("Unable to insert element: table is full");
 }
 
@@ -165,7 +148,6 @@ bool TArrayTable<T>::Remove(const std::string& key)
     data[index].isDeleted = true;
     --size;
     
-    // Периодическое сжатие при низкой загрузке
     if (size < capacity * 0.25 && capacity > 16)
     {
       Compact();
@@ -264,5 +246,4 @@ double TArrayTable<T>::GetLoadFactor() const
   return static_cast<double>(size) / capacity;
 }
 
-// Специализация для полиномов
 using TPolinomArrayTable = TArrayTable<TPolinom>;

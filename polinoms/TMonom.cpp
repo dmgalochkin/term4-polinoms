@@ -2,7 +2,6 @@
 #include <algorithm>
 #include <sstream>
 
-// Конструкторы
 TMonom::TMonom() : coef(0.0) {}
 
 TMonom::TMonom(double c, const std::vector<double>& p)
@@ -17,10 +16,8 @@ TMonom::TMonom(const TMonom& other)
 TMonom::TMonom(TMonom&& other)
   : coef(other.coef), powers(std::move(other.powers)) {}
 
-// Деструктор
 TMonom::~TMonom() {}
 
-// Операторы присваивания
 TMonom& TMonom::operator=(const TMonom& other)
 {
   if (this != &other)
@@ -41,7 +38,6 @@ TMonom& TMonom::operator=(TMonom&& other)
   return *this;
 }
 
-// Геттеры
 double TMonom::GetCoef() const
 {
   return coef;
@@ -57,7 +53,6 @@ size_t TMonom::GetDim() const
   return powers.size();
 }
 
-// Сеттеры
 void TMonom::SetCoef(double c)
 {
   coef = c;
@@ -68,20 +63,18 @@ void TMonom::SetPowers(const std::vector<double>& p)
   powers = p;
 }
 
-// Проверка на нулевой коэффициент
 bool TMonom::IsZero() const
 {
   return std::abs(coef) < EPS;
 }
 
-// Сравнение мономов по степеням (лексикографически)
 bool TMonom::operator<(const TMonom& other) const
 {
   size_t n = powers.size();
   size_t m = other.powers.size();
   if (n != m)
   {
-    return n < m;   // разные размерности – считаем меньшим тот, у кого меньше переменных
+    return n < m;
   }
   for (size_t i = 0; i < n; ++i)
   {
@@ -90,10 +83,9 @@ bool TMonom::operator<(const TMonom& other) const
       return powers[i] < other.powers[i];
     }
   }
-  return false;   // равны
+  return false;
 }
 
-// Проверка на равенство степеней
 bool TMonom::operator==(const TMonom& other) const
 {
   if (powers.size() != other.powers.size())
@@ -115,7 +107,6 @@ bool TMonom::operator!=(const TMonom& other) const
   return !(*this == other);
 }
 
-// Дифференцирование по переменной с индексом varIdx
 TMonom TMonom::Differentiate(int varIdx) const
 {
   if (varIdx < 0 || varIdx >= static_cast<int>(powers.size()))
@@ -125,7 +116,6 @@ TMonom TMonom::Differentiate(int varIdx) const
   double s = powers[varIdx];
   if (std::abs(s) < EPS)
   {
-    // Производная константы (по этой переменной) равна нулю
     return TMonom(0.0, powers);
   }
   std::vector<double> newPowers = powers;
@@ -134,7 +124,6 @@ TMonom TMonom::Differentiate(int varIdx) const
   return TMonom(newCoef, newPowers);
 }
 
-// Интегрирование по переменной varIdx
 TMonom TMonom::Integrate(int varIdx) const
 {
   if (varIdx < 0 || varIdx >= static_cast<int>(powers.size()))
@@ -152,7 +141,6 @@ TMonom TMonom::Integrate(int varIdx) const
   return TMonom(newCoef, newPowers);
 }
 
-// Умножение двух мономов
 TMonom TMonom::operator*(const TMonom& other) const
 {
   if (powers.size() != other.powers.size())
@@ -168,7 +156,6 @@ TMonom TMonom::operator*(const TMonom& other) const
   return TMonom(newCoef, newPowers);
 }
 
-// Умножение на скаляр
 TMonom TMonom::operator*(double scalar) const
 {
   return TMonom(coef * scalar, powers);
@@ -179,7 +166,6 @@ TMonom operator*(double scalar, const TMonom& monom)
   return monom * scalar;
 }
 
-// Вспомогательный вывод в поток
 void TMonom::Print(std::ostream& os) const
 {
   if (IsZero())
@@ -188,7 +174,6 @@ void TMonom::Print(std::ostream& os) const
     return;
   }
   
-  // Выводим коэффициент
   if (std::abs(coef - 1.0) > EPS || powers.empty())
   {
     if (std::abs(coef + 1.0) < EPS && !powers.empty())
@@ -202,10 +187,9 @@ void TMonom::Print(std::ostream& os) const
   }
   else if (!powers.empty())
   {
-    // Коэффициент равен 1, но есть переменные - не выводим коэффициент
   }
   
-  // Выводим переменные
+  const char* varNames[] = {"x", "y", "z"};
   for (size_t i = 0; i < powers.size(); ++i)
   {
     if (std::abs(powers[i]) > EPS)
@@ -214,7 +198,14 @@ void TMonom::Print(std::ostream& os) const
       {
         os << "*";
       }
-      os << "x" << i;
+      if (i < 3)
+      {
+        os << varNames[i];
+      }
+      else
+      {
+        os << "x" << i;
+      }
       if (std::abs(powers[i] - 1.0) > EPS)
       {
         os << "^(" << powers[i] << ")";
@@ -223,7 +214,6 @@ void TMonom::Print(std::ostream& os) const
   }
 }
 
-// Операторы ввода/вывода
 std::ostream& operator<<(std::ostream& os, const TMonom& monom)
 {
   monom.Print(os);
