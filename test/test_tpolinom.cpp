@@ -157,6 +157,87 @@ TEST(TPolinomTest, MultiplicationOperator)
   EXPECT_EQ(result.GetMonoms()[0].GetPowers()[1], 1.0);
 }
 
+TEST(TPolinomTest, DivisionByZero)
+{
+    TMonom m1(2.0, {1.0});
+    TPolinom dividend(m1);
+    TMonom m2(0.0, {0.0});
+    TPolinom divisorZero;
+    divisorZero.AddConstant(0.0);
+    EXPECT_THROW(dividend / divisorZero, std::invalid_argument);
+    EXPECT_THROW(dividend /= divisorZero, std::invalid_argument);
+}
+
+TEST(TPolinomTest, DivisionDimensionMismatch)
+{
+    TMonom m1(2.0, {1.0});
+    TMonom m2(2.0, {1.0, 0.0});
+    TPolinom p1(m1);
+    TPolinom p2(m2);
+    EXPECT_THROW(p1 / p2, std::invalid_argument);
+    EXPECT_THROW(p2 / p1, std::invalid_argument);
+}
+
+TEST(TPolinomTest, DivisionByConstant)
+{
+    TMonom m1(6.0, {2.0});  // 6*x^2
+    TMonom m2(3.0, {0.0});  // 3
+    TPolinom dividend(m1);
+    TPolinom divisor(m2);
+    TPolinom quotient = dividend / divisor;
+    EXPECT_EQ(quotient.GetDim(), 1);
+    EXPECT_EQ(quotient.GetMonomCount(), 1);
+    const auto& monom = quotient.GetMonoms()[0];
+    EXPECT_NEAR(monom.GetCoef(), 2.0, EPS);
+    EXPECT_NEAR(monom.GetPowers()[0], 2.0, EPS);
+}
+
+TEST(TPolinomTest, DivisionExact)
+{
+    // (x^2 - 1) / (x - 1) = x + 1
+    TMonom m1(1.0, {2.0});
+    TMonom m2(-1.0, {0.0});
+    TPolinom dividend(std::vector<TMonom>{m1, m2});
+    TMonom m3(1.0, {1.0});
+    TMonom m4(-1.0, {0.0});
+    TPolinom divisor(std::vector<TMonom>{m3, m4});
+    TPolinom quotient = dividend / divisor;
+    EXPECT_EQ(quotient.GetMonomCount(), 2);
+    bool foundX = false, foundConst = false;
+    for (const auto& mon : quotient.GetMonoms()) {
+        if (mon.GetPowers()[0] == 1.0 && std::abs(mon.GetCoef() - 1.0) < EPS) foundX = true;
+        if (mon.GetPowers()[0] == 0.0 && std::abs(mon.GetCoef() - 1.0) < EPS) foundConst = true;
+    }
+    EXPECT_TRUE(foundX);
+    EXPECT_TRUE(foundConst);
+    TPolinom remainder = dividend - divisor * quotient;
+    EXPECT_TRUE(remainder.IsZero());
+}
+
+TEST(TPolinomTest, DivisionWithRemainder)
+{
+    // (x^2 + 1) / (x - 1) = x + 1, остаток 2
+    TMonom m1(1.0, {2.0});
+    TMonom m2(1.0, {0.0});
+    TPolinom dividend(std::vector<TMonom>{m1, m2});
+    TMonom m3(1.0, {1.0});
+    TMonom m4(-1.0, {0.0});
+    TPolinom divisor(std::vector<TMonom>{m3, m4});
+    TPolinom quotient = dividend / divisor;
+    EXPECT_EQ(quotient.GetMonomCount(), 2);
+    bool foundX = false, foundConst = false;
+    for (const auto& mon : quotient.GetMonoms()) {
+        if (mon.GetPowers()[0] == 1.0 && std::abs(mon.GetCoef() - 1.0) < EPS) foundX = true;
+        if (mon.GetPowers()[0] == 0.0 && std::abs(mon.GetCoef() - 1.0) < EPS) foundConst = true;
+    }
+    EXPECT_TRUE(foundX);
+    EXPECT_TRUE(foundConst);
+    TPolinom remainder = dividend - divisor * quotient;
+    EXPECT_EQ(remainder.GetMonomCount(), 1);
+    EXPECT_NEAR(remainder.GetMonoms()[0].GetCoef(), 2.0, EPS);
+    EXPECT_NEAR(remainder.GetMonoms()[0].GetPowers()[0], 0.0, EPS);
+}
+
 TEST(TPolinomTest, ScalarMultiplication)
 {
   TMonom m1(2.0, {1.0, 0.0});
