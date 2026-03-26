@@ -32,6 +32,7 @@ public:
   TPolinom operator+(const TPolinom& other) const;
   TPolinom operator-(const TPolinom& other) const;
   TPolinom operator*(const TPolinom& other) const;
+  TPolinom operator/(const TPolinom& other) const;
 
   TPolinom operator-() const;
 
@@ -46,6 +47,7 @@ public:
   TPolinom& operator+=(const TPolinom& other);
   TPolinom& operator-=(const TPolinom& other);
   TPolinom& operator*=(const TPolinom& other);
+  TPolinom& operator/=(const TPolinom& other);
 
   TPolinom Differentiate(int varIdx) const;
 
