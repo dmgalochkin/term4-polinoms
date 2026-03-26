@@ -171,6 +171,68 @@ TPolinom TPolinom::operator*(const TPolinom& other) const
   return result;
 }
 
+TPolinom TPolinom::operator/(const TPolinom& other) const
+{
+  if (dim != other.dim)
+    throw std::invalid_argument("Polynomial dimension mismatch in division");
+  if (dim != 1)
+    throw std::invalid_argument("Division only supported for 1-dimensional polynomials");
+  if (other.IsZero())
+    throw std::invalid_argument("Division by zero polynomial");
+
+  TPolinom remainder = *this;
+  TPolinom divisor = other;
+  remainder.Normalize();
+  divisor.Normalize();
+
+  auto sortDesc = [](std::vector<TMonom>& monoms) {
+    std::sort(monoms.begin(), monoms.end(),
+        [](const TMonom& a, const TMonom& b) {
+            const auto& pa = a.GetPowers();
+            const auto& pb = b.GetPowers();
+            if (pa.empty() || pb.empty()) return false;
+            double degA = pa[0];
+            double degB = pb[0];
+            if (std::abs(degA - degB) > EPS)
+              return degA > degB;
+          return false;
+      });
+  };
+
+  sortDesc(remainder.monoms);
+  sortDesc(divisor.monoms);
+
+  TPolinom quotient(dim);
+
+  while (!remainder.IsZero() && !remainder.monoms.empty())
+  {
+    TMonom leadRem = remainder.monoms[0];
+    TMonom leadDiv = divisor.monoms[0];
+
+    double degRem = leadRem.GetPowers()[0];
+    double degDiv = leadDiv.GetPowers()[0];
+    if (degRem + EPS < degDiv)
+      break;
+
+    double newCoef = leadRem.GetCoef() / leadDiv.GetCoef();
+    double newPower = degRem - degDiv;
+    std::vector<double> newPowers = leadRem.GetPowers();
+    newPowers[0] = newPower;
+
+    TMonom qMonom(newCoef, newPowers);
+    quotient.AddMonom(qMonom);
+
+    TPolinom product = divisor * qMonom;
+    remainder = remainder - product;
+
+    remainder.Normalize();
+    sortDesc(remainder.monoms);
+  }
+
+  quotient.Normalize();
+  return quotient;
+}
+
 TPolinom TPolinom::operator-() const
 {
   TPolinom result = *this;
@@ -261,6 +323,12 @@ TPolinom& TPolinom::operator-=(const TPolinom& other)
 TPolinom& TPolinom::operator*=(const TPolinom& other)
 {
   *this = *this * other;
+  return *this;
+}
+
+TPolinom& TPolinom::operator/=(const TPolinom& other)
+{
+  *this = *this / other;
   return *this;
 }
 
