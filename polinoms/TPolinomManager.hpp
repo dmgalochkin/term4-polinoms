@@ -5,6 +5,8 @@
 #include "TOrderedArrayTable.hpp"
 #include "TAVLTreeTable.hpp"
 #include "TPostfixCalculator.hpp"
+#include "THashTable.hpp"
+#include "TRedBlackTree.hpp"
 #include <vector>
 #include <string>
 #include <iostream>
@@ -15,7 +17,9 @@ enum class TableType
   ARRAY_LINEAR,
   LIST_LINEAR,
   ARRAY_ORDERED,
-  TREE_AVL
+  TREE_AVL,
+  HASH_TABLE,
+  RED_BLACK_TREE
 };
 
 class TPolinomManager
@@ -99,6 +103,10 @@ inline TPolinomTable* TPolinomManager::CreateTable(TableType type)
       return new TPolinomOrderedArrayTable();
     case TableType::TREE_AVL:
       return new TPolinomAVLTreeTable();
+    case TableType::HASH_TABLE:
+      return new TPolinomHashTable();
+    case TableType::RED_BLACK_TREE:
+      return new TPolinomRedBlackTree();
     default:
       return new TPolinomArrayTable();
   }
@@ -112,6 +120,8 @@ inline std::string TPolinomManager::GetTableTypeName(TableType type) const
     case TableType::LIST_LINEAR: return "Linear List Table";
     case TableType::ARRAY_ORDERED: return "Ordered Array Table";
     case TableType::TREE_AVL: return "AVL Tree Table";
+    case TableType::HASH_TABLE: return "Hash Table";
+    case TableType::RED_BLACK_TREE: return "Red-Black Tree Table";
     default: return "Unknown Table";
   }
 }
@@ -122,7 +132,9 @@ inline void TPolinomManager::InitializeTables()
     TableType::ARRAY_LINEAR,
     TableType::LIST_LINEAR,
     TableType::ARRAY_ORDERED,
-    TableType::TREE_AVL
+    TableType::TREE_AVL,
+    TableType::HASH_TABLE,
+    TableType::RED_BLACK_TREE
   };
   
   for (TPolinomTable* table : tables)
