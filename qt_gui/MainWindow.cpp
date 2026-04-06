@@ -80,9 +80,6 @@ void MainWindow::setupMenuBar()
 
 void MainWindow::setupStatusBar()
 {
-  m_statusLabel = new QLabel("Готов");
-  statusBar()->addWidget(m_statusLabel);
-  statusBar()->addPermanentWidget(new QLabel(" | "));
   m_activeTableLabel = new QLabel("Активная таблица: Array");
   statusBar()->addPermanentWidget(m_activeTableLabel);
   statusBar()->addPermanentWidget(new QLabel(" | "));

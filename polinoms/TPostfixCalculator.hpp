@@ -192,7 +192,7 @@ inline int TPostfixCalculator::GetOperatorPriority(const std::string& op) const
 
 inline bool TPostfixCalculator::IsLeftAssociative(const std::string& op) const
 {
-  return op != "^"; // Все операторы левоассоциативны, кроме возведения в степень
+  return op != "^";
 }
 
 inline std::vector<std::string> TPostfixCalculator::InfixToPostfix(const std::vector<std::string>& tokens) const
@@ -231,7 +231,7 @@ inline std::vector<std::string> TPostfixCalculator::InfixToPostfix(const std::ve
       }
       if (!operators.empty())
       {
-        operators.pop(); // Удаляем "("
+        operators.pop();
       }
     }
   }

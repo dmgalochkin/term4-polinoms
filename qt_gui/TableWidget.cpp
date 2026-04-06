@@ -199,11 +199,14 @@ void TableWidget::populateTableWidget()
 
 QString TableWidget::getTableTypeName(int index)
 {
-  switch (index) {
+  switch (index) 
+  {
     case 0: return "Linear Array Table";
     case 1: return "Linear List Table";
     case 2: return "Ordered Array Table";
     case 3: return "AVL Tree Table";
+    case 4: return "Hash Table";
+    case 5: return "Red-Black Tree Table";
     default: return "Unknown";
   }
 }
